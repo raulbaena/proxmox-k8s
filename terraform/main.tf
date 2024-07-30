@@ -30,7 +30,7 @@ resource "proxmox_vm_qemu" "k8s_node" {
     type    = "scsi"
     storage = "local-lvm"
   }
-  sshkeys = file("~/.ssh/id_rsa.pub")
+  sshkeys = var.ssh_public_key
   os_type = "cloud-init"
   ciuser = "ubuntu"
   cipassword = "password"

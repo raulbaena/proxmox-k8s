@@ -9,3 +9,6 @@ variable "pm_user" {
 variable "pm_password" {
   description = "Proxmox password"
 }
+variable "ssh_public_key" {
+  description = "The SSH public key to be added to the VM"
+}
