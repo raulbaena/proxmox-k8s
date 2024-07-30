@@ -1,0 +1,71 @@
+---
+- hosts: k8s_nodes
+  become: yes
+  tasks:
+    - name: Instalar dependencias
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Añadir la clave GPG de Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Añadir el repositorio de Docker
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Instalar Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+        update_cache: yes
+
+    - name: Añadir el repositorio de Kubernetes
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: kubernetes
+
+    - name: Añadir la clave GPG de Kubernetes
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Instalar kubelet, kubeadm y kubectl
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: yes
+
+    - name: Deshabilitar swap
+      command: swapoff -a
+
+    - name: Inicializar Kubernetes en el nodo principal
+      command: kubeadm init
+      when: inventory_hostname == 'k8s-node-1'
+
+    - name: Configurar kubectl para el usuario ubuntu
+      command: |
+        mkdir -p /home/ubuntu/.kube &&
+        cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config &&
+        chown ubuntu:ubuntu /home/ubuntu/.kube/config
+      when: inventory_hostname == 'k8s-node-1'
+      become_user: ubuntu
+
+    - name: Unir nodos al cluster
+      command: kubeadm join <MASTER_IP>:<MASTER_PORT> --token <TOKEN> --discovery-token-ca-cert-hash sha256:<HASH>
+      when: inventory_hostname != 'k8s-node-1'
