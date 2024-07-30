@@ -14,6 +14,10 @@ provider "proxmox" {
   pm_tls_insecure = true
 }
 
+variable "ssh_public_key" {
+  description = "The SSH public key to be added to the VM"
+}
+
 resource "proxmox_vm_qemu" "k8s_node" {
   count = 2
   name  = "k8s-node-${count.index + 1}"
